@@ -95,7 +95,8 @@ def log_sensor_reading(timestamp, microamp, feet):
         + "] Current reading is: " + str(microamp) + " [microamps]" \
         + " Water height is: " + str(round(feet,3)) + " [ft]")
 
-def publish_comet_reading_to_google_sheets(comet_client, google_api_instance):
+
+def get_water_reading(comet_client):
     # get comet reading with timestamp
     microampInt = comet_read_microamp_int(comet_client)
     current_time = datetime.datetime.now().isoformat()
@@ -106,9 +107,12 @@ def publish_comet_reading_to_google_sheets(comet_client, google_api_instance):
     # print output to terminal
     log_sensor_reading(current_time, microampInt, feet_output)
 
-    # insert row into google sheet
-    myarray=[current_time, microampInt, feet_output]
-    response = google_api_insert_row(google_api_instance, myarray)
+    water_array=[current_time, microampInt, feet_output]
+    return water_array
+
+def publish_data_to_google_sheets(google_api_instance, data_array):
+    print("Sending data to Google sheet, response follows: ")
+    response = google_api_insert_row(google_api_instance, data_array)
     pprint(response)
 
 def loop(comet_client, google_api_instance):
@@ -127,7 +131,8 @@ def loop(comet_client, google_api_instance):
             time.sleep(1)
 
         # get sensor reading, and publish to google sheet
-        publish_comet_reading_to_google_sheets(comet_client, google_api_instance)
+        water_array = get_water_reading(comet_client)
+        publish_data_to_google_sheets(google_api_instance, water_array)
 
 def main():
     
@@ -135,8 +140,9 @@ def main():
     
     ip_address = '192.168.88.240'
     comet_client = comet_init(ip_address)
+    get_water_reading(comet_client)
 
-    loop(comet_client,google_api_instance)
+    loop(comet_client, google_api_instance)
 
 
 
