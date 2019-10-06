@@ -4,7 +4,7 @@ import os
 import pickle
 from pymodbus.client.sync import ModbusTcpClient
 import time
-import datetime
+from datetime import datetime, timedelta
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -114,8 +114,20 @@ def publish_comet_reading_to_google_sheets(comet_client, google_api_instance):
 def loop(comet_client, google_api_instance):
     
     while True:
+        
+        # get time. add 1 hour. remove minutes, seconds, and microseconds.
+        dt = datetime.now() + timedelta(hours=1)
+        dt = dt.replace(minute=0)
+        dt = dt.replace(second=0)
+        dt = dt.replace(microsecond=0)
+
+        # wait until next hour on the dot.
+        print("Waiting for time: " + dt.isoformat() + " to run.")
+        while datetime.now() < dt:
+            time.sleep(1)
+
+        # get sensor reading, and publish to google sheet
         publish_comet_reading_to_google_sheets(comet_client, google_api_instance)
-        time.sleep(300) # 5 min
 
 def main():
     
