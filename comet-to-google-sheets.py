@@ -99,7 +99,7 @@ def log_sensor_reading(timestamp, microamp, feet):
 def get_water_reading(comet_client):
     # get comet reading with timestamp
     microampInt = comet_read_microamp_int(comet_client)
-    current_time = datetime.datetime.now().isoformat()
+    current_time = datetime.now().isoformat()
     
     # scale output to water depth sensor with range 0 to 30 feet.
     feet_output = scale_420_to_sensor_range(0, 30, microampInt)
@@ -126,7 +126,7 @@ def loop(comet_client, google_api_instance):
         dt = dt.replace(microsecond=0)
 
         # wait until next hour on the dot.
-        print("Waiting for time: " + dt.isoformat() + " to run.")
+        print("Waiting for time: " + dt.isoformat() + " to publish data.")
         while datetime.now() < dt:
             time.sleep(1)
 
