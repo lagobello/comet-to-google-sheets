@@ -67,41 +67,54 @@ def comet_init(ip_address):
     comet_client = ModbusTcpClient(ip_address)
     return comet_client
 
-def comet_read(comet_client):
+def comet_read_microamp_int(comet_client):
     # result = client.read_holding_registers(0x9c22,2,unit=1) # works returns 2.3 as 23
     # result = client.read_input_registers(39977, 2 , unit=1) # returns float 2.3
     result = comet_client.read_input_registers(40002, 1 , unit=1) # returns [uA] int16
     return result.registers[0]
 
+def scale_420_to_sensor_range(sensor_min, sensor_max, microAmpReading):
+    milliampFloat = microAmpReading/1000
+    
+    # perform scale equation 
+    iMin = int(4)
+    iMax = int(20)
+
+    oMin = int(sensor_min)
+    oMax = int(sensor_max)
+
+    ispan = int(iMax - iMin)
+    ospan = int(oMax - oMin)
+
+    milliampFloat_scaled = (milliampFloat - iMin) / ispan
+    output = oMin + (milliampFloat_scaled * ospan)
+    return output
+
+def log_sensor_reading(timestamp, microamp, feet):
+    print("[" + timestamp\
+        + "] Current reading is: " + str(microamp) + " [microamps]" \
+        + " Water height is: " + str(round(feet,3)) + " [ft]")
+
+def publish_comet_reading_to_google_sheets(comet_client, google_api_instance):
+    # get comet reading with timestamp
+    microampInt = comet_read_microamp_int(comet_client)
+    current_time = datetime.datetime.now().isoformat()
+    
+    # scale output to water depth sensor with range 0 to 30 feet.
+    feet_output = scale_420_to_sensor_range(0, 30, microampInt)
+
+    # print output to terminal
+    log_sensor_reading(current_time, microampInt, feet_output)
+
+    # insert row into google sheet
+    myarray=[current_time, microampInt, feet_output]
+    response = google_api_insert_row(google_api_instance, myarray)
+    pprint(response)
+
 def loop(comet_client, google_api_instance):
     
     while True:
-        # get comet reading
-        microampInt = comet_read(comet_client)
-        current_time = datetime.datetime.now().isoformat()
-        milliampFloat = microampInt/1000
-        
-        # perform scale equation 
-        iMin = int(4)
-        iMax = int(20)
-
-        oMin = int(0)
-        oMax = int(30)
-
-        ispan = int(iMax - iMin)
-        ospan = int(oMax - oMin)
-
-        milliampFloat_scaled = (milliampFloat - iMin) / ispan
-        feet_output = oMin + (milliampFloat_scaled * ospan)
-
-        print("[" + current_time\
-            + "] Current reading is: " + str(microampInt) + " [microamps]" + " or " + str(round(milliampFloat, 3)) + " [milliamps]" \
-                + " Water height is: " + str(round(feet_output,3)) + " [ft]")
-
-        # insert row into google sheet
-        myarray=[current_time, microampInt, feet_output]
-        response = google_api_insert_row(google_api_instance, myarray)
-        pprint(response)
+        publish_comet_reading_to_google_sheets(comet_client, google_api_instance)
         time.sleep(300) # 5 min
 
 def main():
