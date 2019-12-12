@@ -143,8 +143,10 @@ def main():
     get_water_reading(comet_client)
 
     loop(comet_client, google_api_instance)
+    print("Loop exited due to unknown exception error.")
 
 
 
 if __name__ == '__main__':
     main()
+    input("Press any key to quit.")
