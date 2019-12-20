@@ -138,8 +138,15 @@ def loop(comet_client, google_api_instance):
         publish_data_to_google_sheets(google_api_instance, water_array)
 
 def main():
-    
-    google_api_instance = google_api_init()
+   for i in range(0,100):
+    while True:
+        try:
+            google_api_instance = google_api_init()
+        except:
+            time.sleep(1)
+            print("Failed to init Google API. Trying again.")
+            continue
+        break 
     
     ip_address = '192.168.88.240'
     comet_client = comet_init(ip_address)
