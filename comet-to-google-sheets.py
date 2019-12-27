@@ -148,7 +148,7 @@ def main():
             continue
         break 
     
-    ip_address = '192.168.88.240'
+    ip_address = '192.168.88.46'
     comet_client = comet_init(ip_address)
     get_water_reading(comet_client)
 
