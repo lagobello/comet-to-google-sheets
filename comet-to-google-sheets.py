@@ -73,7 +73,15 @@ def google_api_insert_row(google_api_instance, myarray):
 
 def comet_init(ip_address):
 
-    comet_client = ModbusTcpClient(ip_address)
+    while True:
+        try:
+            comet_client = ModbusTcpClient(ip_address)
+        except Exception as e:
+            time.sleep(1)
+            print("Failed to init Comet Modbus TCP connection. Trying again.")
+            print(e)
+            continue
+        break
     return comet_client
 
 
@@ -81,8 +89,16 @@ def comet_read_microamp_int(comet_client):
     # result = client.read_holding_registers(0x9c22,2,unit=1) # works returns 2.3 as 23
     # result = client.read_input_registers(39977, 2 , unit=1) # returns float
     # 2.3
-    result = comet_client.read_input_registers(
-        40002, 1, unit=1)  # returns [uA] int16
+    while True:
+        try:
+            result = comet_client.read_input_registers(
+                40002, 1, unit=1)  # returns [uA] int16
+        except Exception as e:
+            time.sleep(1)
+            print("Failed get Comet reading. Trying again.")
+            print(e)
+            continue
+        break
     return result.registers[0]
 
 
@@ -152,25 +168,23 @@ def loop(comet_client, google_api_instance):
 
 
 def main():
-    for i in range(0, 100):
-        while True:
-            try:
-                google_api_instance = google_api_init()
-            except Exception as e:
-                time.sleep(1)
-                print("Failed to init Google API. Trying again.")
-                print(e)
-                continue
-            break
+    while True:
+        try:
+            google_api_instance = google_api_init()
+        except Exception as e:
+            time.sleep(1)
+            print("Failed to init Google API. Trying again.")
+            print(e)
+            continue
+        break
 
-        ip_address = '192.168.88.46'
-        comet_client = comet_init(ip_address)
-        get_water_reading(comet_client)
+    ip_address = '192.168.88.46'
+    comet_client = comet_init(ip_address)
+    get_water_reading(comet_client)
 
-        loop(comet_client, google_api_instance)
-        print("Loop exited due to unknown exception error.")
-
+    loop(comet_client, google_api_instance)
+    print("Loop exited due to unknown exception error.")
+    input("Press any key to quit.") 
 
 if __name__ == '__main__':
     main()
-    input("Press any key to quit.")
