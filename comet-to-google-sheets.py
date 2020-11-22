@@ -142,9 +142,10 @@ def main():
     while True:
         try:
             google_api_instance = google_api_init()
-        except:
+        except Exception as e:
             time.sleep(1)
             print("Failed to init Google API. Trying again.")
+            print(e)
             continue
         break 
     
