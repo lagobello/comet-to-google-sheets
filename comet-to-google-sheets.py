@@ -98,7 +98,13 @@ def comet_read_microamp_int(comet_client):
             print("Failed get Comet reading. Trying again.")
             print(e)
             continue
-        break
+
+        # check if read has error to break out of while loop
+        if not result.isError():
+            break
+        else:
+            continue
+
     return result.registers[0]
 
 
