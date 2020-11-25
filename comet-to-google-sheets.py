@@ -103,6 +103,7 @@ def comet_read_microamp_int(comet_client):
         if not result.isError():
             break
         else:
+            print("modbus result is error. Trying again.")
             continue
 
     return result.registers[0]
